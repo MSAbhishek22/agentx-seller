@@ -47,7 +47,7 @@ code {
 .topbar {
   position: sticky; top: 0; z-index: 50;
   display: flex; align-items: center; gap: 1.5rem;
-  padding: .7rem 1.4rem;
+  padding: .55rem 1.4rem;
   background: rgba(16, 20, 24, .92);
   backdrop-filter: blur(8px);
   border-bottom: 2px solid var(--amber);
@@ -64,45 +64,45 @@ code {
   display: grid;
   grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
   gap: 1rem;
-  padding: .8rem 1.4rem 1rem;
+  padding: .5rem 1.4rem .6rem;
   align-items: stretch;
 }
 .hero-canvas-wrap {
   position: relative;
-  min-height: 520px;
+  min-height: 440px;
   border: 3px solid var(--amber);
   border-radius: var(--radius);
   overflow: hidden;
   background: radial-gradient(120% 90% at 50% 0%, #232d3b 0%, #141a21 55%, #0d1116 100%);
   box-shadow: 8px 8px 0 rgba(245, 165, 36, .25);
 }
-#hero-canvas { display: block; width: 100%; height: 100%; min-height: 520px; cursor: grab; touch-action: none; }
+#hero-canvas { display: block; width: 100%; height: 100%; min-height: 440px; cursor: grab; touch-action: none; }
 #hero-canvas:active { cursor: grabbing; }
 .hero-canvas-note {
   position: absolute; left: .8rem; bottom: .6rem; margin: 0;
   font-size: .82rem; color: var(--muted);
   background: rgba(16, 20, 24, .75); padding: .25em .6em; border-radius: 4px;
 }
-.hero-copy { padding: .6rem .6rem 0 .8rem; }
+.hero-copy { padding: .3rem .6rem 0 .8rem; }
 .eyebrow {
   text-transform: uppercase; letter-spacing: .18em; font-size: .78rem;
-  color: var(--amber); font-weight: 700; margin: 0 0 .8rem;
+  color: var(--amber); font-weight: 700; margin: 0 0 .45rem;
 }
-.hero h1 { font-size: clamp(2.6rem, 6vw, 4.2rem); margin-bottom: .6rem; }
+.hero h1 { font-size: clamp(2.3rem, 4.8vw, 3.2rem); margin-bottom: .45rem; }
 .hero h1 .h-line { display: inline-block; opacity: 0; transform: translateY(28px); animation: rise .7s ease forwards; }
 .hero h1 .h-line:nth-child(2) { animation-delay: .12s; }
 .hero h1 .h-line:nth-child(3) { animation-delay: .24s; }
 .hero h1 .accent { color: var(--amber); }
 @keyframes rise { to { opacity: 1; transform: translateY(0); } }
-.lede { font-size: 1.15rem; line-height: 1.45; color: var(--paper-dim); max-width: 34rem; }
-.hero-facts { display: grid; grid-template-columns: repeat(4, 1fr); gap: .7rem; margin: .8rem 0; }
+.lede { font-size: 1.06rem; line-height: 1.4; color: var(--paper-dim); max-width: 34rem; }
+.hero-facts { display: grid; grid-template-columns: repeat(4, 1fr); gap: .7rem; margin: .45rem 0; }
 .fact {
   border: 2px solid var(--ink-3); border-radius: var(--radius);
-  padding: .7rem .6rem; background: var(--ink-2);
+  padding: .55rem .6rem; background: var(--ink-2);
 }
-.fact strong { display: block; font-family: Georgia, serif; font-size: 1.5rem; color: var(--amber); line-height: 1.1; }
+.fact strong { display: block; font-family: Georgia, serif; font-size: 1.35rem; color: var(--amber); line-height: 1.1; }
 .fact span { font-size: .82rem; color: var(--muted); line-height: 1.35; display: block; margin-top: .2rem; }
-.hero-cta { display: flex; gap: .8rem; flex-wrap: wrap; margin: 1rem 0 .7rem; }
+.hero-cta { display: flex; gap: .8rem; flex-wrap: wrap; margin: .55rem 0 .45rem; }
 .hero-meta { font-size: .88rem; color: var(--muted); }
 
 /* ---------- buttons ---------- */
@@ -306,19 +306,19 @@ footer strong { color: var(--text); }
 .tilt { transition: transform .25s ease; }
 
 /* ---------- extra 3D scenes (added 25 Nov 2026) ---------- */
-.shelf-band { padding: 0 1.4rem 1.2rem; }
+.shelf-band { padding: 0 1.4rem .7rem; }
 #shelf-canvas {
   display: block; width: 100%; height: 130px;
   border: 2px solid var(--ink-3); border-radius: var(--radius);
   background: radial-gradient(120% 100% at 50% 0%, #232d3b 0%, #141a21 60%, #0d1116 100%);
 }
-.shelf-note { text-align: center; font-size: .86rem; color: var(--muted); margin: .5rem 0 0; }
+.shelf-note { text-align: center; font-size: .86rem; color: var(--muted); margin: .35rem 0 0; }
 
 .gate-wrap {
-  margin: .7rem 0 .2rem; padding: .5rem .6rem .4rem;
+  margin: .45rem 0 0; padding: .4rem .6rem .3rem;
   border: 2px solid var(--ink-3); border-radius: var(--radius); background: var(--ink-2);
 }
-#gate-canvas { display: block; width: 100%; height: 88px; }
+#gate-canvas { display: block; width: 100%; height: 132px; }
 .gate-note { font-size: .82rem; color: var(--muted); margin: .3rem 0 0; text-align: center; }
 
 .carousel-wrap { margin: 2rem 0; }

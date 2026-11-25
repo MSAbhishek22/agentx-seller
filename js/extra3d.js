@@ -178,15 +178,20 @@ function initGate() {
   const canvas = document.getElementById('gate-canvas');
   if (!canvas) return;
   runScene(canvas, (scene, camera) => {
-    scene.add(new THREE.AmbientLight(0x8fa3bf, 0.7));
-    const lamp = new THREE.PointLight(0xffb347, 30, 16, 1.8);
+    scene.add(new THREE.AmbientLight(0x8fa3bf, 0.95));
+    const lamp = new THREE.PointLight(0xffb347, 60, 16, 1.8);
     lamp.position.set(0, 4, 3);
     scene.add(lamp);
-    camera.position.set(0, 1.5, 5.2);
+    // Warm front fill so the coin and the frame read against the dark ground.
+    const fill = new THREE.PointLight(0xffc46b, 18, 10, 1.8);
+    fill.position.set(0, 1.2, 3.2);
+    scene.add(fill);
+    camera.position.set(0, 1.45, 3.9);
     camera.lookAt(0, 1.2, 0);
 
     const glass = new THREE.MeshStandardMaterial({
-      color: 0xf5a524, roughness: 0.15, metalness: 0.1, transparent: true, opacity: 0.35,
+      color: 0xf5a524, roughness: 0.15, metalness: 0.1, transparent: true, opacity: 0.5,
+      emissive: 0xf5a524, emissiveIntensity: 0.9,
     });
     const dark = new THREE.MeshStandardMaterial({ color: 0x3a4552, roughness: 0.5, metalness: 0.7 });
     for (const x of [-1.4, 1.4]) {
@@ -202,24 +207,40 @@ function initGate() {
     scene.add(lintel);
     const ground = new THREE.Mesh(
       new THREE.CircleGeometry(3.2, 40),
-      new THREE.MeshStandardMaterial({ color: 0x1a2230, roughness: 0.95, metalness: 0 })
+      new THREE.MeshStandardMaterial({ color: 0x11161d, roughness: 0.95, metalness: 0 })
     );
     ground.rotation.x = -Math.PI / 2;
     scene.add(ground);
+    // Glowing threshold line across the gate — the line every price must cross.
+    const threshold = new THREE.Mesh(
+      new THREE.BoxGeometry(3.1, 0.05, 0.34),
+      new THREE.MeshBasicMaterial({ color: 0xf5a524 })
+    );
+    threshold.position.set(0, 0.03, 0);
+    scene.add(threshold);
 
-    const goldMat = new THREE.MeshStandardMaterial({ color: 0xf2c14e, roughness: 0.25, metalness: 0.9 });
+    const goldMat = new THREE.MeshStandardMaterial({
+      color: 0xf2c14e, roughness: 0.25, metalness: 0.9,
+      emissive: 0x8a6d1f, emissiveIntensity: 0.7,
+    });
     const greenMat = new THREE.MeshStandardMaterial({
       color: 0x2e9e8f, roughness: 0.3, metalness: 0.6,
-      emissive: 0x1f7a4d, emissiveIntensity: 0.6,
+      emissive: 0x1f7a4d, emissiveIntensity: 1.0,
     });
-    const coin = makeCoin(0.62, goldMat);
+    const coin = makeCoin(0.68, goldMat);
     coin.rotation.x = Math.PI / 2.4;
     scene.add(coin);
     return {
       tick(t) {
         const cyc = (t % 5) / 5; // 5-second loop
-        coin.position.set(-2.2 + cyc * 4.4, 1.2, 0);
-        coin.rotation.z += 0.03;
+        // Travel stays between the gate posts (±1.4), so the coin is
+        // mid-gate in any still screenshot — never parked at an edge.
+        coin.position.set(-1.15 + cyc * 2.3, 1.2, 0);
+        // Spin around the coin's own face normal (local Y): with the
+        // fixed x-tilt the face stays toward the camera, so the coin
+        // reads as a round coin in every frame instead of tumbling
+        // edge-on (rotation.z would swing the face away twice a spin).
+        coin.rotation.y += 0.03;
         coin.material = coin.position.x > 0 ? greenMat : goldMat;
       },
     };
