@@ -46,7 +46,17 @@
         <a class="btn btn-ghost" href="#design">How the two layers work</a>
       </div>
       <p class="hero-meta">Built solo by M S Abhishek · Team “Abhi Solo” · Competition ID AX-B093BC8933D5 · Round 1 due 30 Nov 2026, 23:59 IST</p>
+      <div class="gate-wrap">
+        <canvas id="gate-canvas" aria-label="A small three-dimensional gate: a gold coin slides through the policy gate and turns green once it passes."></canvas>
+        <p class="gate-note">Every price passes the gate — or it does not go out.</p>
+      </div>
     </div>
+  </section>
+
+  <!-- ============ MARKET SHELF ============ -->
+  <section class="shelf-band" aria-label="Products on the shelf tonight">
+    <canvas id="shelf-canvas" aria-label="A rotating ring of eight real products from the store, with floating gold coins."></canvas>
+    <p class="shelf-note">On the shelf tonight — eight real products from store.csv, one from each of the six categories, plus two more.</p>
   </section>
 
   <!-- ============ PROBLEM ============ -->
@@ -104,6 +114,12 @@
         <p class="formula-note">The strategy can suggest any move it likes. The policy layer checks it, and if the move breaks a rule, the move does not go out. That is the whole design.</p>
       </article>
     </div>
+    <div class="layers3d-wrap reveal">
+      <canvas id="layers-canvas" aria-label="A three-dimensional stack: a glass policy slab floating above a brass strategy slab. Scroll to turn the stack."></canvas>
+      <span class="layers3d-tag tag-top">POLICY — the gate</span>
+      <span class="layers3d-tag tag-bottom">STRATEGY — the talker</span>
+      <p class="layers3d-note">Scroll — the stack turns, and the two layers pull apart. The top layer checks; the bottom layer talks.</p>
+    </div>
   </section>
 
   <!-- ============ MANIPULATOR ============ -->
@@ -128,6 +144,21 @@
     <p class="eyebrow reveal">Live demo</p>
     <h2 class="reveal">Negotiate with the seller agent, right here.</h2>
     <p class="section-lede reveal">This is a browser port of the official Python starter kit — the same store, the same policy, the same three buyer bots. Pick a real product, pick a buyer, and watch the two layers work. The policy layer checks every seller move before it is sent, and it checks every buyer bid before the seller accepts it.</p>
+
+    <div class="carousel-wrap reveal">
+      <h3>Pick a product from the shelf</h3>
+      <p class="hint">Ten real in-stock products, turning slowly. Drag it, use the arrows, or tap a crate — then load it into the demo below.</p>
+      <div class="carousel-stage">
+        <canvas id="carousel-canvas" tabindex="0" aria-label="A three-dimensional carousel of ten real products. Use the left and right arrow keys, drag, or the buttons to turn it."></canvas>
+        <button class="carousel-arrow" id="carousel-prev" type="button" aria-label="Previous product">‹</button>
+        <button class="carousel-arrow" id="carousel-next" type="button" aria-label="Next product">›</button>
+      </div>
+      <div class="carousel-bar">
+        <p class="carousel-label" id="carousel-label" aria-live="polite"></p>
+        <button class="btn btn-solid" id="carousel-use-btn" type="button">Use this product in the demo ↓</button>
+      </div>
+      <p class="hint" id="carousel-note"></p>
+    </div>
 
     <div class="demo">
       <div class="demo-controls">
@@ -222,6 +253,9 @@
   <section class="section section-dark" id="pack">
     <p class="eyebrow reveal">Round 1 pack</p>
     <h2 class="reveal">What gets filed on 30 November.</h2>
+    <div class="terrain-wrap reveal">
+      <canvas id="terrain-canvas" aria-label="A wireframe night terrain with drifting lights."></canvas>
+    </div>
     <div class="pack-grid">
       <div class="pack-item reveal"><strong>Abstract</strong><span>500 words, written. The plan the agent is built to.</span></div>
       <div class="pack-item reveal"><strong>Demo video</strong><span>3 minutes, recorded from the live build.</span></div>

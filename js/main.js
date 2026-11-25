@@ -1,6 +1,8 @@
-// Page wiring: scroll reveal, 3D tilt on cards, hero scene, live demo.
+// Page wiring: scroll reveal, 3D tilt on cards, hero scene, live demo,
+// extra 3D scenes (shelf, gate, carousel, layers stack, terrain).
 import { initHero } from './hero.js';
 import { initDemo } from './demo.js';
+import { initExtra3D } from './extra3d.js';
 
 const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -17,9 +19,10 @@ if (reduced || !('IntersectionObserver' in window)) {
   revealEls.forEach((el) => io.observe(el));
 }
 
-// 3D tilt on the problem/scoring cards (pointer only, transform only).
+// 3D tilt on the problem/scoring cards, the two layer panels and the
+// manipulator quotes (pointer only, transform only).
 if (!reduced && window.matchMedia('(pointer: fine)').matches) {
-  for (const card of document.querySelectorAll('.card, .pack-item')) {
+  for (const card of document.querySelectorAll('.card, .pack-item, .layer, .tactic')) {
     card.classList.add('tilt');
     card.addEventListener('pointermove', (e) => {
       const r = card.getBoundingClientRect();
@@ -33,3 +36,4 @@ if (!reduced && window.matchMedia('(pointer: fine)').matches) {
 
 initHero();
 initDemo();
+initExtra3D();
