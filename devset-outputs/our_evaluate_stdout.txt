@@ -1,0 +1,18 @@
+seller              /home/hatch/workspace/hackathons/agentx/seller/seller.py
+negotiations        210   (162 where a compliant deal existed)
+deal rate           0.752   (baseline 0.757)   where possible 0.975
+margin kept         0.666   (baseline 0.673)   (share of list-price profit, on deals)
+value               0.501   (baseline 0.510)   (deal rate and margin together)
+policy violations   0   (baseline 0)
+truth violations    0   (baseline 0)
+deadlocks           0   (baseline 21)   (walked away: seller 48, buyer 4)
+rounds              6.6 on average
+latency             0.01 ms/turn, p95 0.02 ms
+SCORE               50.1   (baseline 48.5)
+
+by buyer                n   deals  margin  value  policy  truth  deadlocks  score
+  cooperative            70   0.89   0.78   0.69       0      0         0    69.1
+  hard_bargainer         70   0.73   0.61   0.44       0      0         0    44.2
+  manipulator            70   0.64   0.57   0.37       0      0         0    36.9
+
+transcripts: /home/hatch/workspace/hackathons/agentx/devset-outputs/our_transcripts.jsonl
