@@ -47,7 +47,12 @@ function runScene(canvas, build) {
   const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
   const api = build(scene, camera) || {};
   function resize() {
-    const w = wrap.clientWidth, h = wrap.clientHeight;
+    // Size the drawing buffer from the CANVAS's own CSS box, not the wrap:
+    // the wrap also holds the caption, so sizing from it squashed every
+    // scene vertically (~19%) — round coins rendered as ovals, and the
+    // shelf's front crates were pushed toward the bottom edge. This was
+    // one of the two root causes behind the round-1 real-browser failures.
+    const w = canvas.clientWidth, h = canvas.clientHeight;
     if (w === 0 || h === 0) return;
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
@@ -87,11 +92,35 @@ function makeCrate(size, colour) {
   return mesh;
 }
 
-function makeCoin(r, mat) {
-  return new THREE.Mesh(new THREE.CylinderGeometry(r, r, 0.08, 24), mat);
-}
+// Bright coin materials. The old gold used metalness 0.9 with no
+// environment map on the page, so it rendered near-black (dark bronze)
+// and only its specular highlight ever showed. Low metalness + strong
+// emissive means the face reads bright gold in any frame, any angle.
+const GOLD_DISC = new THREE.MeshStandardMaterial({
+  color: 0xffd24a, roughness: 0.3, metalness: 0.25,
+  emissive: 0xcc8a00, emissiveIntensity: 1.5, side: THREE.DoubleSide,
+});
+const GOLD_RIM = new THREE.MeshStandardMaterial({
+  color: 0xffc233, roughness: 0.3, metalness: 0.4,
+  emissive: 0xb97e00, emissiveIntensity: 1.3,
+});
 
-const GOLD = new THREE.MeshStandardMaterial({ color: 0xf2c14e, roughness: 0.25, metalness: 0.9 });
+// A coin that always faces the camera: a flat disc + torus rim in the XY
+// plane (facing +Z), billboarded with lookAt() every frame. The round-1
+// coin was a cylinder tilted rotation.x = π/2.4 and spun on rotation.y;
+// the tilt made its face an ellipse, the vertical buffer squash (see
+// runScene) flattened it further, and the dark metal finished the job —
+// in the real browser it read as a thin bronze sliver. A billboarded
+// disc cannot turn edge-on, in any frame, at any spin.
+function makeBillboardCoin(r, discMat, rimMat) {
+  const g = new THREE.Group();
+  const disc = new THREE.Mesh(new THREE.CircleGeometry(r, 48), discMat);
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(r, r * 0.07, 12, 48), rimMat);
+  const inner = new THREE.Mesh(new THREE.TorusGeometry(r * 0.62, r * 0.04, 8, 48), rimMat);
+  inner.position.z = 0.01;
+  g.add(disc, rim, inner);
+  return g;
+}
 
 // One in-stock product per category, then the next in-stock products by SKU.
 function shelfPicks(n) {
@@ -118,33 +147,50 @@ function initShelf() {
   if (!canvas) return;
   const picks = shelfPicks(8);
   runScene(canvas, (scene, camera) => {
-    scene.fog = new THREE.Fog(0x101418, 9, 18);
-    scene.add(new THREE.AmbientLight(0x8fa3bf, 0.6));
-    const lamp = new THREE.PointLight(0xffb347, 40, 24, 1.8);
+    scene.fog = new THREE.Fog(0x101418, 12, 26);
+    scene.add(new THREE.AmbientLight(0x8fa3bf, 0.8));
+    const lamp = new THREE.PointLight(0xffb347, 60, 26, 1.8);
     lamp.position.set(0, 5, 4);
     scene.add(lamp);
-    camera.position.set(0, 2.3, 7.2);
+    // Reframed (round 2): the old camera (0, 2.3, 7.2) put the front
+    // crates' bases ~34.5° below horizontal against a frame bottom of
+    // ~32°, so their bases — and the near half of the disc — were sliced
+    // off. Camera pulled back and raised, FOV narrowed to 36°, ring
+    // radius 4.0 → 2.9, disc 5.0 → 3.5. At the new framing the front
+    // disc edge sits ~26° below horizontal against a ~32° frame bottom,
+    // and the highest coin top ~5° below against a ~4° frame top: the
+    // full ring, the full disc and the full coins fit with clear margin.
+    camera.position.set(0, 3.6, 10.8);
+    camera.fov = 36;
+    camera.updateProjectionMatrix();
 
     const ring = new THREE.Group();
     scene.add(ring);
+    // Elliptical disc: the band is ~12× wider than tall, so a round ring
+    // read as a small cluster lost in dark space. The ellipse (x 8.0,
+    // z 2.9) fills the band's width while its z-depth — which is what
+    // sets the vertical fit — is unchanged from the round-2 reframe.
     const disc = new THREE.Mesh(
-      new THREE.CircleGeometry(5.0, 48),
+      new THREE.CircleGeometry(2.9, 48),
       new THREE.MeshStandardMaterial({ color: 0x1a2230, roughness: 0.95, metalness: 0 })
     );
     disc.rotation.x = -Math.PI / 2;
+    disc.scale.set(8.0 / 2.9, 1, 1);
     scene.add(disc);
 
+    // Coins live at scene level (not ring children) and are billboarded
+    // every frame: the old flat cylinders lay horizontal and were seen
+    // nearly edge-on from this camera, so they read as thin slivers.
     const coins = [];
     picks.forEach((p, i) => {
       const a = (i / picks.length) * Math.PI * 2;
-      const crate = makeCrate(1.0, CATEGORY_COLOURS[p.category]);
-      crate.position.set(Math.cos(a) * 4.0, 0.6, Math.sin(a) * 4.0);
+      const crate = makeCrate(1.15, CATEGORY_COLOURS[p.category]);
+      crate.position.set(Math.cos(a) * 8.0, 0.6, Math.sin(a) * 2.9);
       crate.rotation.y = -a;
       ring.add(crate);
-      const coin = makeCoin(0.3, GOLD);
-      coin.position.set(Math.cos(a + 0.4) * 4.0, 1.85 + (i % 2) * 0.3, Math.sin(a + 0.4) * 4.0);
-      coin.userData = { baseY: coin.position.y, phase: i * 1.1 };
-      ring.add(coin);
+      const coin = makeBillboardCoin(0.36, GOLD_DISC, GOLD_RIM);
+      coin.userData = { angle: a + 0.4, baseY: 1.9 + (i % 2) * 0.3, phase: i * 1.1 };
+      scene.add(coin);
       coins.push(coin);
     });
 
@@ -157,12 +203,17 @@ function initShelf() {
       tick(t) {
         ring.rotation.y += 0.0022;
         for (const c of coins) {
-          c.position.y = c.userData.baseY + Math.sin(t * 0.9 + c.userData.phase) * 0.18;
-          c.rotation.y += 0.02;
+          const a = c.userData.angle + ring.rotation.y;
+          c.position.set(
+            Math.cos(a) * 8.0,
+            c.userData.baseY + Math.sin(t * 0.9 + c.userData.phase) * 0.18,
+            Math.sin(a) * 2.9
+          );
+          c.lookAt(camera.position);
         }
         targetCamX += (mx * 1.2 - targetCamX) * 0.04;
         camera.position.x = targetCamX;
-        camera.lookAt(0, 1.1, 0);
+        camera.lookAt(0, 0.85, 0);
       },
     };
   });
@@ -182,66 +233,107 @@ function initGate() {
     const lamp = new THREE.PointLight(0xffb347, 60, 16, 1.8);
     lamp.position.set(0, 4, 3);
     scene.add(lamp);
-    // Warm front fill so the coin and the frame read against the dark ground.
-    const fill = new THREE.PointLight(0xffc46b, 18, 10, 1.8);
-    fill.position.set(0, 1.2, 3.2);
+    // Warm front fill, from the viewer's side and in front of the coin's
+    // plane, so the coin's face and the posts are lit toward the camera.
+    const fill = new THREE.PointLight(0xffc46b, 30, 12, 1.8);
+    fill.position.set(0, 1.4, 2.6);
     scene.add(fill);
+    // Small lamp right in front of the coin so its face can never go dark.
+    const coinLamp = new THREE.PointLight(0xffe08a, 15, 6, 1.8);
+    coinLamp.position.set(0, 1.35, 1.8);
+    scene.add(coinLamp);
     camera.position.set(0, 1.45, 3.9);
-    camera.lookAt(0, 1.2, 0);
+    camera.lookAt(0, 1.3, 0);
 
+    // Frame: the old posts were 0.28 wide in a canvas ~6.7× wider than
+    // tall, so the whole gate filled ~15% of the frame and read small;
+    // their emissive 0.9 halved again by 0.5 opacity read dull brown.
+    // The gate is now wider (±2.4), the posts thicker (0.34) with a
+    // stronger emissive (1.6 at 0.7 opacity), and each post — and the
+    // lintel — carries an unlit amber core that glows in every frame
+    // regardless of the lighting angle.
     const glass = new THREE.MeshStandardMaterial({
-      color: 0xf5a524, roughness: 0.15, metalness: 0.1, transparent: true, opacity: 0.5,
-      emissive: 0xf5a524, emissiveIntensity: 0.9,
+      color: 0xf5a524, roughness: 0.15, metalness: 0.1, transparent: true, opacity: 0.7,
+      emissive: 0xf5a524, emissiveIntensity: 1.6,
     });
+    const coreMat = new THREE.MeshBasicMaterial({ color: 0xffc233 });
     const dark = new THREE.MeshStandardMaterial({ color: 0x3a4552, roughness: 0.5, metalness: 0.7 });
-    for (const x of [-1.4, 1.4]) {
-      const pillar = new THREE.Mesh(new THREE.BoxGeometry(0.28, 2.6, 0.28), glass);
+    for (const x of [-2.4, 2.4]) {
+      const pillar = new THREE.Mesh(new THREE.BoxGeometry(0.34, 2.6, 0.34), glass);
       pillar.position.set(x, 1.3, 0);
       scene.add(pillar);
-      const base = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.18, 0.5), dark);
+      const core = new THREE.Mesh(new THREE.BoxGeometry(0.12, 2.5, 0.12), coreMat);
+      core.position.set(x, 1.3, 0);
+      scene.add(core);
+      const base = new THREE.Mesh(new THREE.BoxGeometry(0.56, 0.18, 0.56), dark);
       base.position.set(x, 0.09, 0);
       scene.add(base);
     }
-    const lintel = new THREE.Mesh(new THREE.BoxGeometry(3.3, 0.24, 0.28), glass);
+    const lintel = new THREE.Mesh(new THREE.BoxGeometry(5.3, 0.26, 0.3), glass);
     lintel.position.set(0, 2.7, 0);
     scene.add(lintel);
+    const lintelCore = new THREE.Mesh(new THREE.BoxGeometry(5.3, 0.07, 0.32), coreMat);
+    lintelCore.position.set(0, 2.58, 0);
+    scene.add(lintelCore);
     const ground = new THREE.Mesh(
-      new THREE.CircleGeometry(3.2, 40),
+      new THREE.CircleGeometry(3.6, 40),
       new THREE.MeshStandardMaterial({ color: 0x11161d, roughness: 0.95, metalness: 0 })
     );
     ground.rotation.x = -Math.PI / 2;
     scene.add(ground);
     // Glowing threshold line across the gate — the line every price must cross.
     const threshold = new THREE.Mesh(
-      new THREE.BoxGeometry(3.1, 0.05, 0.34),
+      new THREE.BoxGeometry(5.1, 0.05, 0.34),
       new THREE.MeshBasicMaterial({ color: 0xf5a524 })
     );
     threshold.position.set(0, 0.03, 0);
     scene.add(threshold);
+    // Amber floor strip: the canvas is far wider than the gate is tall,
+    // so a lit strip grounds the composition instead of dark empty space.
+    const strip = new THREE.Mesh(
+      new THREE.BoxGeometry(9.5, 0.04, 0.5),
+      new THREE.MeshBasicMaterial({ color: 0x8a5a10 })
+    );
+    strip.position.set(0, 0.02, 0.85);
+    scene.add(strip);
 
-    const goldMat = new THREE.MeshStandardMaterial({
-      color: 0xf2c14e, roughness: 0.25, metalness: 0.9,
-      emissive: 0x8a6d1f, emissiveIntensity: 0.7,
-    });
-    const greenMat = new THREE.MeshStandardMaterial({
-      color: 0x2e9e8f, roughness: 0.3, metalness: 0.6,
-      emissive: 0x1f7a4d, emissiveIntensity: 1.0,
-    });
-    const coin = makeCoin(0.68, goldMat);
-    coin.rotation.x = Math.PI / 2.4;
+    // The coin: a flat disc + torus rim facing +Z, billboarded at the
+    // camera every frame, parked at the centre of the gate (x = 0, y =
+    // 1.35 — the gate's middle). It can never turn edge-on and it can
+    // never drift off-centre in a still frame, which is what the round-1
+    // coin did (it travelled ±1.15, so most stills caught it off-centre).
+    // The coin itself stays bright gold in every frame; the "passed"
+    // state is a green halo that fades in around it — so a still taken
+    // at any moment reads ROUND and BRIGHT GOLD.
+    const coin = makeBillboardCoin(0.95, GOLD_DISC, GOLD_RIM);
+    coin.position.set(0, 1.35, 0);
+    const halo = new THREE.Mesh(
+      new THREE.TorusGeometry(1.18, 0.05, 12, 48),
+      new THREE.MeshBasicMaterial({ color: 0x2e9e8f, transparent: true, opacity: 0 })
+    );
+    coin.add(halo);
     scene.add(coin);
+    // Two small companion coins fill the wide canvas either side.
+    const minis = [];
+    for (const x of [-3.6, 3.6]) {
+      const mini = makeBillboardCoin(0.42, GOLD_DISC, GOLD_RIM);
+      mini.position.set(x, 1.35, 0);
+      scene.add(mini);
+      minis.push(mini);
+    }
+    let wasGreen = false;
     return {
       tick(t) {
-        const cyc = (t % 5) / 5; // 5-second loop
-        // Travel stays between the gate posts (±1.4), so the coin is
-        // mid-gate in any still screenshot — never parked at an edge.
-        coin.position.set(-1.15 + cyc * 2.3, 1.2, 0);
-        // Spin around the coin's own face normal (local Y): with the
-        // fixed x-tilt the face stays toward the camera, so the coin
-        // reads as a round coin in every frame instead of tumbling
-        // edge-on (rotation.z would swing the face away twice a spin).
-        coin.rotation.y += 0.03;
-        coin.material = coin.position.x > 0 ? greenMat : goldMat;
+        coin.position.y = 1.35 + Math.sin(t * 1.2) * 0.05;
+        coin.lookAt(camera.position);
+        for (const m of minis) m.lookAt(camera.position);
+        // Gold while it waits at the gate; once it has "passed", a green
+        // halo fades in around the still-gold coin.
+        const green = (t % 5) >= 2.5;
+        if (green !== wasGreen) {
+          wasGreen = green;
+          halo.material.opacity = green ? 0.9 : 0;
+        }
       },
     };
   });

@@ -308,14 +308,14 @@ footer strong { color: var(--text); }
 /* ---------- extra 3D scenes (added 25 Nov 2026) ---------- */
 .shelf-band { padding: 0 1.4rem .7rem; }
 #shelf-canvas {
-  display: block; width: 100%; height: 130px;
+  display: block; width: 100%; height: 150px;
   border: 2px solid var(--ink-3); border-radius: var(--radius);
   background: radial-gradient(120% 100% at 50% 0%, #232d3b 0%, #141a21 60%, #0d1116 100%);
 }
 .shelf-note { text-align: center; font-size: .86rem; color: var(--muted); margin: .35rem 0 0; }
 
 .gate-wrap {
-  margin: .45rem 0 0; padding: .4rem .6rem .3rem;
+  margin: .45rem auto 0; padding: .4rem .6rem .3rem; max-width: 640px;
   border: 2px solid var(--ink-3); border-radius: var(--radius); background: var(--ink-2);
 }
 #gate-canvas { display: block; width: 100%; height: 132px; }
@@ -377,7 +377,7 @@ footer strong { color: var(--text); }
 @media (max-width: 960px) {
   .hero { grid-template-columns: 1fr; }
   .hero-canvas-wrap, #hero-canvas { min-height: 380px; }
-  #shelf-canvas { height: 140px; }
+  #shelf-canvas { height: 150px; }
   #carousel-canvas { height: 240px; }
   #layers-canvas { height: 240px; }
   #terrain-canvas { height: 180px; }
